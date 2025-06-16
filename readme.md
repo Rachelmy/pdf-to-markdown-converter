@@ -75,7 +75,9 @@ streamlit run frontend.py
 
 6. Click "Convert to Markdown" to process the file
 
-7. View the results and download the converted Markdown file
+7. After conversion, files are saved to an `output` directory:
+- `output.md`: The converted Markdown file
+- Image files: Extracted images in JPEG format
 
 ## Configuration Options
 
@@ -106,9 +108,4 @@ The application provides:
 - Marker FastAPI server running on localhost:8001
 - Google Gemini API for enhanced processing (when LLM option is enabled)
 
-## File Structure
-
-After conversion, files are saved to an `output` directory:
-- `output.md`: The converted Markdown file
-- Image files: Extracted images in JPEG format
 
