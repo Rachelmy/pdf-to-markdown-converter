@@ -91,7 +91,7 @@ def initialize_state():
         st.session_state["pdf_file"] = None
     # Initialize conversion parameters
     if "page_range" not in st.session_state:
-        st.session_state["page_range"] = "0-"
+        st.session_state["page_range"] = ""  # Empty string represents whole PDF
     if "force_ocr" not in st.session_state:
         st.session_state["force_ocr"] = False
     if "strip_existing_ocr" not in st.session_state:
@@ -168,7 +168,7 @@ def main():
         st.session_state.page_range = st.text_input(
             "Page range to parse (e.g. 0,5-10,20)",
             value=st.session_state.page_range,
-            help="Specify which pages to convert. Use comma-separated ranges like 0,5-10,20"
+            help="Specify which pages to convert. Use comma-separated ranges like 0,5-10,20. Leave empty for whole PDF."
         )
         
         # OCR settings
@@ -241,7 +241,7 @@ def main():
                 with st.spinner("Converting PDF to Markdown... This may take a while."):
                     # Get conversion parameters from session state or use defaults
                     conversion_params = {
-                        "page_range": st.session_state.get("page_range", "0-"),
+                        "page_range": st.session_state.get("page_range", ""),  # Empty string for whole PDF
                         "force_ocr": st.session_state.get("force_ocr", False),
                         "strip_existing_ocr": st.session_state.get("strip_existing_ocr", False),
                         "use_llm": st.session_state.get("use_llm", False),
