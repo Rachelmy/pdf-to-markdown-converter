@@ -15,16 +15,47 @@ st.set_page_config(
 
 # Configuration
 MARKER_API_URL = "http://localhost:8001"  # Adjust this to your FastAPI server URL
+GEMINI_API_KEY = 'AIzaSyCWuw0qAohbkVqsUThxtjthIzRtOyo_DNo'
 
 
-def upload_pdf_to_server(pdf_file) -> Optional[str]:
-    """Upload PDF to the Marker FastAPI server and get conversion result."""
+def upload_pdf_to_server(pdf_file, conversion_params: dict = None) -> Optional[str]:
+    """Upload PDF to the Marker FastAPI server and get conversion result.
+    
+    Args:
+        pdf_file: The PDF file to upload
+        conversion_params: Dictionary of conversion parameters to pass to the server
+            Supported parameters:
+            - page_range: str, comma-separated page ranges (e.g. "0,5-10,20")
+            - force_ocr: bool, force OCR on all pages
+            - strip_existing_ocr: bool, strip existing OCR text
+            - use_llm: bool, use LLM for higher quality processing
+            - format_lines: bool, format lines with OCR model
+            - disable_ocr_math: bool, disable math in OCR output
+            - debug: bool, show debug information
+    """
     try:
         # Prepare the file for upload
         files = {"file": (pdf_file.name, pdf_file.getvalue(), "application/pdf")}
-
+        
+        # Prepare conversion parameters
+        params = conversion_params or {}
+        
+        # Convert boolean values to strings for form data
+        form_data = {}
+        for key, value in params.items():
+            if isinstance(value, bool):
+                form_data[key] = str(value).lower()
+            else:
+                form_data[key] = value
+        
+        print("Sending request with form data:", form_data)
+        
         # Make request to the FastAPI server
-        response = requests.post(f"{MARKER_API_URL}/marker/upload", files=files)
+        response = requests.post(
+            f"{MARKER_API_URL}/marker/upload",
+            files=files,
+            data=form_data  # Use data parameter for form fields
+        )
 
         if response.status_code == 200:
             return response.json()
@@ -58,6 +89,21 @@ def initialize_state():
         st.session_state["conversion_done"] = False
     if "pdf_file" not in st.session_state:
         st.session_state["pdf_file"] = None
+    # Initialize conversion parameters
+    if "page_range" not in st.session_state:
+        st.session_state["page_range"] = "0-"
+    if "force_ocr" not in st.session_state:
+        st.session_state["force_ocr"] = False
+    if "strip_existing_ocr" not in st.session_state:
+        st.session_state["strip_existing_ocr"] = False
+    if "use_llm" not in st.session_state:
+        st.session_state["use_llm"] = False
+    if "format_lines" not in st.session_state:
+        st.session_state["format_lines"] = False
+    if "disable_ocr_math" not in st.session_state:
+        st.session_state["disable_ocr_math"] = False
+    if "debug" not in st.session_state:
+        st.session_state["debug"] = False
 
 
 def decode_base64_images(encoded_images: Dict[str, str]) -> Dict[str, Image.Image]:
@@ -107,13 +153,63 @@ def prepare_markdown_with_images(markdown_text: str, decoded_images: Dict[str, s
 
 
 def main():
-
     initialize_state()
 
     st.title("📄 PDF to Markdown Converter")
     st.markdown(
         "Convert your PDF documents to Markdown format using the Marker library"
     )
+
+    # Add conversion parameters in sidebar
+    with st.sidebar:
+        st.header("⚙️ Conversion Settings")
+        
+        # Page range input
+        st.session_state.page_range = st.text_input(
+            "Page range to parse (e.g. 0,5-10,20)",
+            value=st.session_state.page_range,
+            help="Specify which pages to convert. Use comma-separated ranges like 0,5-10,20"
+        )
+        
+        # OCR settings
+        st.subheader("OCR Settings")
+        st.session_state.force_ocr = st.checkbox(
+            "Force OCR",
+            value=st.session_state.force_ocr,
+            help="Force OCR on all pages"
+        )
+        st.session_state.strip_existing_ocr = st.checkbox(
+            "Strip existing OCR",
+            value=st.session_state.strip_existing_ocr,
+            help="Strip existing OCR text from the PDF and re-OCR"
+        )
+        
+        # Processing settings
+        st.subheader("Processing Settings")
+        st.session_state.use_llm = st.checkbox(
+            "Use LLM",
+            value=st.session_state.use_llm,
+            help="Use LLM for higher quality processing"
+        )
+        st.session_state.format_lines = st.checkbox(
+            "Format lines",
+            value=st.session_state.format_lines,
+            help="Format lines in the document with OCR model"
+        )
+        st.session_state.disable_ocr_math = st.checkbox(
+            "Disable math",
+            value=st.session_state.disable_ocr_math,
+            help="Disable math in OCR output - no inline math"
+        )
+        
+        # Debug settings
+        st.subheader("Debug Settings")
+        st.session_state.debug = st.checkbox(
+            "Debug mode",
+            value=st.session_state.debug,
+            help="Show debug information"
+        )
+
     # Create two columns
     col1, col2 = st.columns([1, 1])
 
@@ -143,8 +239,18 @@ def main():
             # Convert button
             if st.button("🔄 Convert to Markdown", type="primary"):
                 with st.spinner("Converting PDF to Markdown... This may take a while."):
-                    result = upload_pdf_to_server(uploaded_file)
-                    print("Conversion result:", result)
+                    # Get conversion parameters from session state or use defaults
+                    conversion_params = {
+                        "page_range": st.session_state.get("page_range", "0-"),
+                        "force_ocr": st.session_state.get("force_ocr", False),
+                        "strip_existing_ocr": st.session_state.get("strip_existing_ocr", False),
+                        "use_llm": st.session_state.get("use_llm", False),
+                        "gemini_api_key": GEMINI_API_KEY,
+                        "format_lines": st.session_state.get("format_lines", False),
+                        "disable_ocr_math": st.session_state.get("disable_ocr_math", False),
+                        "debug": st.session_state.get("debug", False)
+                    }
+                    result = upload_pdf_to_server(uploaded_file, conversion_params)
                     markdown_result = result.get("output", "")
                     image_encoded = result.get("images", {})
                     
