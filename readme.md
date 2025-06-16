@@ -64,10 +64,10 @@ uvicorn backend:app --reload --port=8001                                        
 
 2. Run the Streamlit app:
 ```bash
-streamlit run app.py
+streamlit run frontend.py
 ```
 
-3. Open your browser to the displayed URL (usually http://localhost:8501)
+3. Open your browser to the displayed URL 
 
 4. Upload a PDF file using the file uploader
 
