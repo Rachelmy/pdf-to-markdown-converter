@@ -43,7 +43,7 @@ A complete solution for converting PDF documents to Markdown format using the Ma
 
 1. Install required packages:
 ```bash
-pip install fastapi uvicorn streamlit requests pillow marker-pdf click
+pip install -r requirements.txt
 ```
 
 2. Update the `GEMINI_API_KEY` variable in the Streamlit app with your Google Gemini API key
