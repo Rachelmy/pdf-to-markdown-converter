@@ -54,15 +54,9 @@ pip install fastapi uvicorn streamlit requests pillow marker-pdf click
 
 1. Run the FastAPI server:
 ```bash
-python backend.py --host 127.0.0.1 --port 8001
-```
+uvicorn backend:app --reload --port=8001                                                             ─╯
 
-Or use the default settings:
-```bash
-python backend.py
 ```
-
-The server will start on http://127.0.0.1:8000 by default.
 
 ### Starting the Frontend App
 
