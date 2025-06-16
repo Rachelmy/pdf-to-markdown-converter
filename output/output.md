@@ -98,7 +98,7 @@ Instead of performing a single attention function with dmodel-dimensional keys, 
 Multi-head attention allows the model to jointly attend to information from different representation subspaces at different positions. With a single attention head, averaging inhibits this.
 
 $$
-\begin{split} \textrm{MultiHead}(Q,K,V) &= \textrm{Concat}(\textrm{head}_1,...,\textrm{head}_\textrm{h})W^O \\ & \textrm{where head}_\textrm{i} = \textrm{Attention}(QW^Q_i,KW^K_i,VW^V_i) \end{split}
+\label{eq:multiHead} \begin{split} \textrm{MultiHead}(Q,K,V) &= \textrm{Concat}(\textrm{head}_1,...,\textrm{head}_\textrm{h})W^O \\ & \textrm{where head}_\textrm{i} = \textrm{Attention}(QW^Q_i,KW^K_i,VW^V_i) \end{split}
 $$
 
 Where the projections are parameter matrices W Q <sup>i</sup> <sup>∈</sup> <sup>R</sup> <sup>d</sup>model×d<sup>k</sup> , W <sup>K</sup> <sup>i</sup> ∈ R <sup>d</sup>model×d<sup>k</sup> , W<sup>V</sup> <sup>i</sup> ∈ R dmodel×d<sup>v</sup> and W<sup>O</sup> ∈ R hdv×dmodel .
@@ -134,12 +134,12 @@ Since our model contains no recurrence and no convolution, in order for the mode
 
 <span id="page-5-0"></span>Table 1: Maximum path lengths, per-layer complexity and minimum number of sequential operations for different layer types. n is the sequence length, d is the representation dimension, k is the kernel size of convolutions and r the size of the neighborhood in restricted self-attention.
 
-| Layer Type                  | Complexity per Layer  | Sequential<br>Operations | Maximum Path Length |
-|-----------------------------|-----------------------|--------------------------|---------------------|
-| Self-Attention              | 2<br>O(n<br>· d)      | O(1)                     | O(1)                |
-| Recurrent                   | 2<br>O(n · d<br>)     | O(n)                     | O(n)                |
-| Convolutional               | 2<br>O(k · n · d<br>) | O(1)                     | O(logk(n))          |
-| Self-Attention (restricted) | O(r · n · d)          | O(1)                     | O(n/r)              |
+| Layer Type                  | Complexity per Layer     | Sequential Operations | Maximum Path Length |
+|-----------------------------|--------------------------|-----------------------|---------------------|
+| Self-Attention              | $O(n^2 \cdot d)$         | $O(1)$                | $O(1)$              |
+| Recurrent                   | $O(n \cdot d^2)$         | $O(n)$                | $O(n)$              |
+| Convolutional               | $O(k \cdot n \cdot d^2)$ | $O(1)$                | $O(log_k(n))$       |
+| Self-Attention (restricted) | $O(r \cdot n \cdot d)$   | $O(1)$                | $O(n/r)$            |
 
 tokens in the sequence. To this end, we add "positional encodings" to the input embeddings at the bottoms of the encoder and decoder stacks. The positional encodings have the same dimension dmodel as the embeddings, so that the two can be summed. There are many choices of positional encodings, learned and fixed [\[9\]](#page-10-8).
 
@@ -203,19 +203,19 @@ Residual Dropout We apply dropout [\[33\]](#page-11-8) to the output of each sub
 
 <span id="page-7-0"></span>
 
-|                                 | BLEU  |       | Training Cost (FLOPs) |            |  |  |
-|---------------------------------|-------|-------|-----------------------|------------|--|--|
-| Model                           | EN-DE | EN-FR | EN-DE                 | EN-FR      |  |  |
-| ByteNet [18]                    | 23.75 |       |                       |            |  |  |
-| Deep-Att + PosUnk [39]          |       | 39.2  |                       | 1.0 · 1020 |  |  |
-| GNMT + RL [38]                  | 24.6  | 39.92 | 2.3 · 1019            | 1.4 · 1020 |  |  |
-| ConvS2S [9]                     | 25.16 | 40.46 | 9.6 · 1018            | 1.5 · 1020 |  |  |
-| MoE [32]                        | 26.03 | 40.56 | 2.0 · 1019            | 1.2 · 1020 |  |  |
-| Deep-Att + PosUnk Ensemble [39] |       | 40.4  |                       | 8.0 · 1020 |  |  |
-| GNMT + RL Ensemble [38]         | 26.30 | 41.16 | 1.8 · 1020            | 1.1 · 1021 |  |  |
-| ConvS2S Ensemble [9]            | 26.36 | 41.29 | 7.7 · 1019            | 1.2 · 1021 |  |  |
-| Transformer (base model)        | 27.3  | 38.1  |                       | 3.3 · 1018 |  |  |
-| Transformer (big)               | 28.4  | 41.8  |                       | 2.3 · 1019 |  |  |
+| Model                           | BLEU  |       | Training Cost (FLOPs) |            |
+|---------------------------------|-------|-------|-----------------------|------------|
+|                                 | EN-DE | EN-FR | EN-DE                 | EN-FR      |
+| ByteNet [18]                    | 23.75 |       |                       |            |
+| Deep-Att + PosUnk [39]          |       | 39.2  |                       | 1.0 · 1020 |
+| GNMT + RL [38]                  | 24.6  | 39.92 | 2.3 · 1019            | 1.4 · 1020 |
+| ConvS2S [9]                     | 25.16 | 40.46 | 9.6 · 1018            | 1.5 · 1020 |
+| MoE [32]                        | 26.03 | 40.56 | 2.0 · 1019            | 1.2 · 1020 |
+| Deep-Att + PosUnk Ensemble [39] |       | 40.4  |                       | 8.0 · 1020 |
+| GNMT + RL Ensemble [38]         | 26.30 | 41.16 | 1.8 · 1020            | 1.1 · 1021 |
+| ConvS2S Ensemble [9]            | 26.36 | 41.29 | 7.7 · 1019            | 1.2 · 1021 |
+| Transformer (base model)        | 27.3  | 38.1  | 3.3 · 1018            |            |
+| Transformer (big)               | 28.4  | 41.8  | 2.3 · 1019            |            |
 
 Table 2: The Transformer achieves better BLEU scores than previous state-of-the-art models on the English-to-German and English-to-French newstest2014 tests at a fraction of the training cost.
 
@@ -243,29 +243,28 @@ In Table [3](#page-8-0) rows (A), we vary the number of attention heads and the 
 
 <span id="page-8-0"></span>Table 3: Variations on the Transformer architecture. Unlisted values are identical to those of the base model. All metrics are on the English-to-German translation development set, newstest2013. Listed perplexities are per-wordpiece, according to our byte-pair encoding, and should not be compared to per-word perplexities.
 
-|      | N                                         |        |      |    |      |      |       | ls  | train | PPL   | BLEU  | params |
-|------|-------------------------------------------|--------|------|----|------|------|-------|-----|-------|-------|-------|--------|
-|      |                                           | dmodel | dff  | h  | dk   | dv   | Pdrop |     | steps | (dev) | (dev) | ×106   |
-| base | 6                                         | 512    | 2048 | 8  | 64   | 64   | 0.1   | 0.1 | 100K  | 4.92  | 25.8  | 65     |
-| (A)  |                                           |        |      | 1  | 512  | 512  |       |     |       | 5.29  | 24.9  |        |
-|      |                                           |        |      | 4  | 128  | 128  |       |     |       | 5.00  | 25.5  |        |
-|      |                                           |        |      | 16 | 32   | 32   |       |     |       | 4.91  | 25.8  |        |
-|      |                                           |        |      | 32 | 16   | 16   |       |     |       | 5.01  | 25.4  |        |
-| (B)  |                                           |        |      |    | 16   |      |       |     |       | 5.16  | 25.1  | 58     |
-|      |                                           |        |      |    | 32   |      |       |     |       | 5.01  | 25.4  | 60     |
-|      | 2                                         |        |      |    |      |      |       |     |       | 6.11  | 23.7  | 36     |
-|      | 4                                         |        |      |    |      |      |       |     |       | 5.19  | 25.3  | 50     |
-|      | 8                                         |        |      |    |      |      |       |     |       | 4.88  | 25.5  | 80     |
-| (C)  |                                           | 256    |      |    | 32   | 32   |       |     |       | 5.75  | 24.5  | 28     |
-|      |                                           | 1024   |      |    | 128  | 128  |       |     |       | 4.66  | 26.0  | 168    |
-|      |                                           |        | 1024 |    |      |      |       |     |       | 5.12  | 25.4  | 53     |
-|      |                                           |        | 4096 |    |      |      |       |     |       | 4.75  | 26.2  | 90     |
-| (D)  |                                           |        |      |    |      |      | 0.0   |     |       | 5.77  | 24.6  |        |
-|      |                                           |        |      |    |      |      | 0.2   |     |       | 4.95  | 25.5  |        |
-|      |                                           |        |      |    |      |      |       | 0.0 |       | 4.67  | 25.3  |        |
-|      |                                           |        |      |    |      |      |       | 0.2 |       | 5.47  | 25.7  |        |
-| (E)  | positional embedding instead of sinusoids |        |      |    | 4.92 | 25.7 |       |     |       |       |       |        |
-| big  | 6                                         | 1024   | 4096 | 16 |      |      | 0.3   |     | 300K  | 4.33  | 26.4  | 213    |
+|      | N                                         | $d_{model}$ | $d_{ff}$ | h  | $d_k$ | $d_v$ | $P_{drop}$ | $\epsilon_{ls}$ | train steps | PPL (dev) | BLEU (dev) | params $\times 10^6$ |
+|------|-------------------------------------------|-------------|----------|----|-------|-------|------------|-----------------|-------------|-----------|------------|----------------------|
+| base | 6                                         | 512         | 2048     | 8  | 64    | 64    | 0.1        | 0.1             | 100K        | 4.92      | 25.8       | 65                   |
+| (A)  |                                           |             |          | 1  | 512   | 512   |            |                 |             | 5.29      | 24.9       |                      |
+|      |                                           |             |          | 4  | 128   | 128   |            |                 |             | 5.00      | 25.5       |                      |
+|      |                                           |             |          | 16 | 32    | 32    |            |                 |             | 4.91      | 25.8       |                      |
+|      |                                           |             |          | 32 | 16    | 16    |            |                 |             | 5.01      | 25.4       |                      |
+| (B)  |                                           |             |          |    | 16    |       |            |                 |             | 5.16      | 25.1       | 58                   |
+|      |                                           |             |          |    | 32    |       |            |                 |             | 5.01      | 25.4       | 60                   |
+| (C)  | 2                                         |             |          |    |       |       |            |                 |             | 6.11      | 23.7       | 36                   |
+|      | 4                                         |             |          |    |       |       |            |                 |             | 5.19      | 25.3       | 50                   |
+|      | 8                                         |             |          |    |       |       |            |                 |             | 4.88      | 25.5       | 80                   |
+|      |                                           | 256         |          |    | 32    | 32    |            |                 |             | 5.75      | 24.5       | 28                   |
+|      |                                           | 1024        |          |    | 128   | 128   |            |                 |             | 4.66      | 26.0       | 168                  |
+|      |                                           |             | 1024     |    |       |       |            |                 |             | 5.12      | 25.4       | 53                   |
+|      |                                           |             | 4096     |    |       |       |            |                 |             | 4.75      | 26.2       | 90                   |
+| (D)  |                                           |             |          |    |       |       | 0.0        |                 |             | 5.77      | 24.6       |                      |
+|      |                                           |             |          |    |       |       | 0.2        |                 |             | 4.95      | 25.5       |                      |
+|      |                                           |             |          |    |       |       |            | 0.0             |             | 4.67      | 25.3       |                      |
+|      |                                           |             |          |    |       |       |            | 0.2             |             | 5.47      | 25.7       |                      |
+| (E)  | positional embedding instead of sinusoids |             |          |    |       |       |            |                 |             | 4.92      | 25.7       |                      |
+| big  | 6                                         | 1024        | 4096     | 16 |       |       | 0.3        |                 | 300K        | 4.33      | 26.4       | 213                  |
 
 Table 4: The Transformer generalizes well to English constituency parsing (Results are on Section 23 of WSJ)
 
