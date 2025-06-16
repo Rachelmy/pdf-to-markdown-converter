@@ -15,7 +15,7 @@ st.set_page_config(
 
 # Configuration
 MARKER_API_URL = "http://localhost:8001"  # Adjust this to your FastAPI server URL
-GEMINI_API_KEY = 'AIzaSyCWuw0qAohbkVqsUThxtjthIzRtOyo_DNo'
+GEMINI_API_KEY = 'your gemini api key'
 
 
 def upload_pdf_to_server(pdf_file, conversion_params: dict = None) -> Optional[str]:
