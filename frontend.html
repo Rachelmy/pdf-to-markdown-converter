@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Converter Pro - AI-Powered Document Processing</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -256,6 +261,140 @@
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.9rem;
             line-height: 1.5;
+        }
+
+        /* Markdown rendering styles */
+        .result-content.rendered {
+            background: white;
+            color: #000000;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+        }
+
+        .result-content.rendered h1,
+        .result-content.rendered h2,
+        .result-content.rendered h3,
+        .result-content.rendered h4,
+        .result-content.rendered h5,
+        .result-content.rendered h6 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #000000;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .result-content.rendered h1 { font-size: 2rem; }
+        .result-content.rendered h2 { font-size: 1.5rem; }
+        .result-content.rendered h3 { font-size: 1.25rem; }
+        .result-content.rendered h4 { font-size: 1.125rem; }
+
+        .result-content.rendered p {
+            margin-bottom: 1rem;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+        }
+
+        .result-content.rendered img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-content.rendered code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            color: #e53e3e;
+        }
+
+        .result-content.rendered pre {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-content.rendered pre code {
+            background: none;
+            padding: 0;
+            color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .result-content.rendered blockquote {
+            border-left: 4px solid #4299e1;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #000000;
+            font-style: italic;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .result-content.rendered ul,
+        .result-content.rendered ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+        }
+
+        .result-content.rendered li {
+            margin-bottom: 0.5rem;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+        }
+
+        .result-content.rendered table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .result-content.rendered th,
+        .result-content.rendered td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            text-align: left;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+        }
+
+        .result-content.rendered th {
+            background: #f7fafc;
+            font-weight: 600;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+        }
+
+        /* LaTeX styling */
+        .result-content.rendered .katex {
+            font-size: 1em;
+        }
+
+        .result-content.rendered .katex-display {
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .result-content.rendered .katex-display > .katex {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .result-content.rendered .katex-error {
+            color: #cc0000;
+            background: #ffe6e6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            border: 1px solid #ffcccc;
         }
 
         /* Loading Animation */
@@ -551,12 +690,17 @@
         <!-- Results Section -->
         <div class="results-section" id="resultsSection" style="display: none;">
             <h3><i class="fas fa-file-alt"></i> Conversion Results</h3>
+            <div id="viewToggle" style="margin-bottom: 1rem; display: none;">
+                <button class="convert-btn" onclick="toggleView()" style="width: auto; margin-right: 1rem; background: var(--accent-color);">
+                    <i class="fas fa-eye"></i> <span id="toggleText">Show Raw</span>
+                </button>
+            </div>
             <div class="result-content" id="resultContent">
                 <pre id="resultText"></pre>
             </div>
             <div style="margin-top: 1rem;">
                 <button class="convert-btn" onclick="downloadResult()" style="width: auto; margin-right: 1rem;">
-                    <i class="fas fa-download"></i> Download Result
+                    <i class="fas fa-download"></i> Download All Results (ZIP)
                 </button>
                 <button class="convert-btn" onclick="copyToClipboard()" style="width: auto; background: var(--secondary-color);">
                     <i class="fas fa-copy"></i> Copy to Clipboard
@@ -681,7 +825,7 @@
                     formData.append('gemini_api_key', geminiApiKey);
                 }
 
-                const response = await          fetch('http://localhost:8000/marker/upload', {
+                const response = await fetch('http://localhost:8000/marker/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -695,7 +839,14 @@
                     if (result.success) {
                         conversionResult = result;
                         showResults(result.output);
-                        showStatus('PDF converted successfully!', 'success');
+                        
+                        // Show status about images if they exist
+                        if (result.images && Object.keys(result.images).length > 0) {
+                            const imageCount = Object.keys(result.images).length;
+                            showStatus(`PDF converted successfully! ${imageCount} images extracted. Use "Download Result" to get everything in a zip file.`, 'success');
+                        } else {
+                            showStatus('PDF converted successfully!', 'success');
+                        }
                     } else {
                         showStatus('Conversion failed: ' + result.error, 'error');
                     }
@@ -716,9 +867,124 @@
         }
 
         function showResults(output) {
-            document.getElementById('resultText').textContent = output;
+            const resultContent = document.getElementById('resultContent');
+            const resultText = document.getElementById('resultText');
+            const viewToggle = document.getElementById('viewToggle');
+            
+            // Check if the output format is markdown
+            if (conversionResult && conversionResult.format === 'markdown') {
+                // Show toggle button for markdown
+                viewToggle.style.display = 'block';
+                // Render markdown with images
+                renderMarkdownWithImages(output);
+            } else {
+                // Hide toggle button for other formats
+                viewToggle.style.display = 'none';
+                // Show as plain text for other formats
+                resultText.textContent = output;
+                resultContent.classList.remove('rendered');
+            }
+            
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderMarkdownWithImages(markdownContent) {
+            const resultContent = document.getElementById('resultContent');
+            const resultText = document.getElementById('resultText');
+            
+            // Replace image references with actual base64 data
+            let processedMarkdown = markdownContent;
+            
+            if (conversionResult && conversionResult.images) {
+                for (const [imageName, base64Data] of Object.entries(conversionResult.images)) {
+                    // Create a regex to match image references in markdown
+                    // This handles various formats like ![alt](imageName) or ![alt](imageName.ext)
+                    const imageRegex = new RegExp(`!\\[([^\\]]*)\\]\\(${imageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\.[a-zA-Z]+)?\\)`, 'g');
+                    
+                    // Replace with base64 data URL
+                    processedMarkdown = processedMarkdown.replace(imageRegex, (match, altText) => {
+                        return `![${altText}](data:image/png;base64,${base64Data})`;
+                    });
+                }
+            }
+            
+            // Store both raw and processed markdown
+            resultText.setAttribute('data-raw-markdown', markdownContent);
+            resultText.setAttribute('data-processed-markdown', processedMarkdown);
+            
+            // Render the markdown
+            try {
+                const renderedHtml = marked.parse(processedMarkdown);
+                resultText.innerHTML = renderedHtml;
+                resultContent.classList.add('rendered');
+                document.getElementById('toggleText').textContent = 'Show Raw';
+                
+                // Render LaTeX after markdown is rendered
+                renderLaTeX(resultText);
+            } catch (error) {
+                console.error('Error rendering markdown:', error);
+                // Fallback to plain text if rendering fails
+                resultText.textContent = markdownContent;
+                resultContent.classList.remove('rendered');
+            }
+        }
+
+        function renderLaTeX(element) {
+            // Wait for KaTeX to be loaded
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(element, {
+                    // Delimiters for inline and block math
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    // Throw on error instead of rendering error message
+                    throwOnError: false,
+                    // Error color
+                    errorColor: '#cc0000',
+                    // Macros for common LaTeX commands
+                    macros: {
+                        "\\RR": "\\mathbb{R}",
+                        "\\NN": "\\mathbb{N}",
+                        "\\ZZ": "\\mathbb{Z}",
+                        "\\QQ": "\\mathbb{Q}",
+                        "\\CC": "\\mathbb{C}"
+                    }
+                });
+            } else {
+                // If KaTeX is not loaded yet, try again after a short delay
+                setTimeout(() => renderLaTeX(element), 100);
+            }
+        }
+
+        function toggleView() {
+            const resultContent = document.getElementById('resultContent');
+            const resultText = document.getElementById('resultText');
+            const toggleText = document.getElementById('toggleText');
+            
+            if (resultContent.classList.contains('rendered')) {
+                // Switch to raw view
+                resultText.textContent = resultText.getAttribute('data-raw-markdown');
+                resultContent.classList.remove('rendered');
+                toggleText.textContent = 'Show Rendered';
+            } else {
+                // Switch to rendered view
+                const processedMarkdown = resultText.getAttribute('data-processed-markdown');
+                try {
+                    const renderedHtml = marked.parse(processedMarkdown);
+                    resultText.innerHTML = renderedHtml;
+                    resultContent.classList.add('rendered');
+                    toggleText.textContent = 'Show Raw';
+                    
+                    // Render LaTeX after switching to rendered view
+                    renderLaTeX(resultText);
+                } catch (error) {
+                    console.error('Error rendering markdown:', error);
+                }
+            }
         }
 
         function hideResults() {
@@ -739,15 +1005,96 @@
         function downloadResult() {
             if (!conversionResult) return;
             
-            const blob = new Blob([conversionResult.output], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = selectedFile.name.replace('.pdf', '.' + conversionResult.format);
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            // Create zip file with all content
+            createAndDownloadZip();
+        }
+
+        async function createAndDownloadZip() {
+            try {
+                const zip = new JSZip();
+                const baseFileName = selectedFile.name.replace('.pdf', '');
+                
+                // Add the main output file with original filename
+                const outputFileName = `${baseFileName}_converted.${conversionResult.format}`;
+                zip.file(outputFileName, conversionResult.output);
+                
+                // Add images if they exist
+                if (conversionResult.images && Object.keys(conversionResult.images).length > 0) {
+                    let imageCount = 0;
+                    for (const [imageName, base64Data] of Object.entries(conversionResult.images)) {
+                        try {
+                            // Remove data URL prefix if present
+                            const base64Clean = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
+                            
+                            // Clean up image name to avoid duplicate extensions
+                            let cleanImageName = imageName;
+                            // Remove any existing extension
+                            if (cleanImageName.includes('.')) {
+                                cleanImageName = cleanImageName.split('.').slice(0, -1).join('.');
+                            }
+                            
+                            // Determine file extension from image name or default to png
+                            const extension = imageName.includes('.') ? 
+                                imageName.split('.').pop() : 'png';
+                            
+                            // Create filename directly in zip without output folder
+                            const fileName = `${cleanImageName}.${extension}`;
+                            
+                            // Add to zip
+                            zip.file(fileName, base64Clean, {base64: true});
+                            imageCount++;
+                        } catch (error) {
+                            console.error(`Error processing image ${imageName}:`, error);
+                        }
+                    }
+                    
+                    // Add a README file with information
+                    const readmeContent = `PDF Conversion Results
+
+Original file: ${selectedFile.name}
+Output format: ${conversionResult.format}
+Images extracted: ${imageCount}
+
+Files included:
+- ${baseFileName}_converted.${conversionResult.format}: Main conversion output
+- ${imageCount} image files
+
+Generated on: ${new Date().toLocaleString()}
+`;
+                    zip.file('README.txt', readmeContent);
+                } else {
+                    // Add a README file for cases with no images
+                    const readmeContent = `PDF Conversion Results
+
+Original file: ${selectedFile.name}
+Output format: ${conversionResult.format}
+Images extracted: 0
+
+Files included:
+- ${baseFileName}_converted.${conversionResult.format}: Main conversion output
+
+Generated on: ${new Date().toLocaleString()}
+`;
+                    zip.file('README.txt', readmeContent);
+                }
+                
+                // Generate and download zip file
+                const zipBlob = await zip.generateAsync({type: 'blob'});
+                const zipUrl = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = zipUrl;
+                a.download = `${baseFileName}_converted.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(zipUrl);
+                
+                showStatus('Download completed! Zip file contains all conversion results and images.', 'success');
+                
+            } catch (error) {
+                console.error('Error creating zip file:', error);
+                showStatus('Error creating zip file: ' + error.message, 'error');
+            }
         }
 
         function copyToClipboard() {
