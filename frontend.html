@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Converter Pro - AI-Powered Document Processing</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #475569;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            animation: fadeInLeft 0.8s ease-out 0.2s both;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent-color);
+            background: rgba(6, 182, 212, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-text p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* Options Section */
+        .options-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            animation: fadeInRight 0.8s ease-out 0.4s both;
+        }
+
+        .options-section h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .option-group {
+            margin-bottom: 2rem;
+        }
+
+        .option-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .option-group input[type="text"],
+        .option-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .option-group input[type="text"]:focus,
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            accent-color: var(--primary-color);
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        /* Convert Button */
+        .convert-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+
+        .results-section h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .result-content {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-content pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .upload-section,
+            .options-section,
+            .results-section {
+                padding: 1.5rem;
+            }
+        }
+
+        /* File Preview */
+        .file-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .file-preview.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .file-size {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .remove-file {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .remove-file:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-file-pdf"></i> PDF Converter Pro</h1>
+            <p>Transform your PDFs into markdown, JSON, or HTML with AI-powered processing</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <h3><i class="fas fa-cloud-upload-alt"></i> Upload PDF</h3>
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" class="file-input" id="fileInput" accept=".pdf" />
+                    <div class="upload-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Drop your PDF here</h3>
+                        <p>or click to browse files</p>
+                        <small>Supports PDF files up to 50MB</small>
+                    </div>
+                </div>
+                <div class="file-preview" id="filePreview">
+                    <div class="file-info">
+                        <div class="file-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="file-details">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button class="remove-file" onclick="removeFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Section -->
+            <div class="options-section">
+                <h3><i class="fas fa-cog"></i> Conversion Options</h3>
+                
+                <div class="option-group">
+                    <label for="outputFormat">Output Format</label>
+                    <select id="outputFormat">
+                        <option value="markdown">Markdown</option>
+                        <option value="json">JSON</option>
+                        <option value="html">HTML</option>
+                    </select>
+                </div>
+
+                <div class="option-group">
+                    <label for="pageRange">Page Range (Optional)</label>
+                    <input type="text" id="pageRange" placeholder="e.g., 0,5-10,20">
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="forceOcr">
+                    <label for="forceOcr">Force OCR (may reduce quality for text-based PDFs)</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="paginateOutput">
+                    <label for="paginateOutput">Paginate Output</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="useLlm">
+                    <label for="useLlm">Use AI Enhancement (requires Gemini API key)</label>
+                </div>
+
+                <div class="option-group" id="apiKeyGroup" style="display: none;">
+                    <label for="geminiApiKey">Gemini API Key</label>
+                    <input type="password" id="geminiApiKey" placeholder="Enter your Gemini API key">
+                </div>
+
+                <button class="convert-btn" id="convertBtn" onclick="convertPdf()">
+                    <i class="fas fa-magic"></i> Convert PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your PDF... This may take a few moments.</p>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="status" id="status"></div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h3><i class="fas fa-file-alt"></i> Conversion Results</h3>
+            <div class="result-content" id="resultContent">
+                <pre id="resultText"></pre>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button class="convert-btn" onclick="downloadResult()" style="width: auto; margin-right: 1rem;">
+                    <i class="fas fa-download"></i> Download Result
+                </button>
+                <button class="convert-btn" onclick="copyToClipboard()" style="width: auto; background: var(--secondary-color);">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let conversionResult = null;
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const useLlmCheckbox = document.getElementById('useLlm');
+        const apiKeyGroup = document.getElementById('apiKeyGroup');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        useLlmCheckbox.addEventListener('change', () => {
+            apiKeyGroup.style.display = useLlmCheckbox.checked ? 'block' : 'none';
+        });
+
+        function handleFileSelect(file) {
+            if (file.type !== 'application/pdf') {
+                showStatus('Please select a PDF file.', 'error');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                showStatus('File size must be less than 50MB.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            filePreview.classList.add('show');
+            showStatus('File selected successfully!', 'success');
+        }
+
+        function removeFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            filePreview.classList.remove('show');
+            hideStatus();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function convertPdf() {
+            if (!selectedFile) {
+                showStatus('Please select a PDF file first.', 'error');
+                return;
+            }
+
+            const useLlm = document.getElementById('useLlm').checked;
+            const geminiApiKey = document.getElementById('geminiApiKey').value;
+
+            if (useLlm && !geminiApiKey) {
+                showStatus('Gemini API key is required when using AI enhancement.', 'error');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('convertBtn').disabled = true;
+            hideStatus();
+            hideResults();
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                document.getElementById('progressFill').style.width = progress + '%';
+            }, 200);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('output_format', document.getElementById('outputFormat').value);
+                formData.append('page_range', document.getElementById('pageRange').value);
+                formData.append('force_ocr', document.getElementById('forceOcr').checked);
+                formData.append('paginate_output', document.getElementById('paginateOutput').checked);
+                formData.append('use_llm', useLlm);
+                if (geminiApiKey) {
+                    formData.append('gemini_api_key', geminiApiKey);
+                }
+
+                const response = await          fetch('http://localhost:8000/marker/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                clearInterval(progressInterval);
+                document.getElementById('progressFill').style.width = '100%';
+
+                setTimeout(() => {
+                    if (result.success) {
+                        conversionResult = result;
+                        showResults(result.output);
+                        showStatus('PDF converted successfully!', 'success');
+                    } else {
+                        showStatus('Conversion failed: ' + result.error, 'error');
+                    }
+                    
+                    // Hide loading
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('progressBar').style.display = 'none';
+                    document.getElementById('convertBtn').disabled = false;
+                }, 500);
+
+            } catch (error) {
+                clearInterval(progressInterval);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('progressBar').style.display = 'none';
+                document.getElementById('convertBtn').disabled = false;
+                showStatus('Network error: ' + error.message, 'error');
+            }
+        }
+
+        function showResults(output) {
+            document.getElementById('resultText').textContent = output;
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function hideStatus() {
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function downloadResult() {
+            if (!conversionResult) return;
+            
+            const blob = new Blob([conversionResult.output], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedFile.name.replace('.pdf', '.' + conversionResult.format);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            if (!conversionResult) return;
+            
+            navigator.clipboard.writeText(conversionResult.output).then(() => {
+                showStatus('Result copied to clipboard!', 'success');
+            }).catch(() => {
+                showStatus('Failed to copy to clipboard.', 'error');
+            });
+        }
+
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add hover effects to option groups
+            const optionGroups = document.querySelectorAll('.option-group');
+            optionGroups.forEach(group => {
+                group.addEventListener('mouseenter', () => {
+                    group.style.transform = 'translateX(5px)';
+                    group.style.transition = 'transform 0.3s ease';
+                });
+                
+                group.addEventListener('mouseleave', () => {
+                    group.style.transform = 'translateX(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
