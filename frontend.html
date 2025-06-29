@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Converter Pro - AI-Powered Document Processing</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
@@ -17,10 +17,52 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
         crossorigin="anonymous"></script>
+    <style>
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info span {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .logout-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container">
+        <!-- User Info and Logout -->
+        <div class="user-info">
+            <span>Welcome, <span id="username"></span>!</span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <h1><i class="fas fa-file-pdf"></i> PDF Converter Pro</h1>
@@ -145,6 +187,57 @@
         let selectedFile = null;
         let conversionResult = null;
 
+        // Check authentication on page load
+        window.onload = async function() {
+            const token = localStorage.getItem('auth_token');
+            const username = localStorage.getItem('username');
+            
+            if (!token || !username) {
+                // Redirect to login if no token
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Verify token is still valid
+            try {
+                const response = await fetch('/auth/verify', {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    // Token is valid, display username
+                    document.getElementById('username').textContent = username;
+                } else {
+                    // Token is invalid, redirect to login
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('username');
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Auth verification error:', error);
+                // Network error, redirect to login
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            }
+        };
+
+        // Function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('auth_token');
+            return {
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+
         // File upload handling
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -261,8 +354,17 @@
 
                 const response = await fetch('http://localhost:8000/marker/upload', {
                     method: 'POST',
+                    headers: getAuthHeaders(),
                     body: formData
                 });
+
+                // Check if token is expired
+                if (response.status === 401) {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('username');
+                    window.location.href = '/login';
+                    return;
+                }
 
                 const result = await response.json();
 

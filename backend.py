@@ -47,22 +47,36 @@ from contextlib import asynccontextmanager
 from typing import Optional, Annotated
 import io
 
-from fastapi import FastAPI, Form, File, UploadFile
+from fastapi import FastAPI, Form, File, UploadFile, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.settings import settings
 
-app_data = {}
+# Import our custom modules
+from database import create_tables, get_db, User
+from auth import (
+    authenticate_user, create_user, get_current_user, create_access_token,
+    log_login_attempt, get_user_by_username
+)
 
+app_data = {}
 
 UPLOAD_DIRECTORY = "./uploads"
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
+# Security scheme
+security = HTTPBearer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app_data["models"] = create_model_dict()
+    
+    # Create database tables
+    create_tables()
+    logger.info("Database tables created/verified")
 
     yield
 
@@ -81,9 +95,152 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="."), name="static")
+
+# Pydantic models for authentication
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserRegister(BaseModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    username: str
+
+# Authentication endpoints
+@app.post("/auth/login", response_model=Token)
+async def login(user_data: UserLogin, request: Request, db=Depends(get_db)):
+    """Login endpoint"""
+    try:
+        logger.info(f"Login attempt for user: {user_data.username}")
+        logger.info(f"Request headers: {dict(request.headers)}")
+        logger.info(f"Request client: {request.client}")
+        
+        # Authenticate user
+        user = authenticate_user(db, user_data.username, user_data.password)
+        
+        if not user:
+            # Log failed login attempt
+            log_login_attempt(db, user_data.username, False, request, "Invalid credentials")
+            logger.warning(f"Failed login attempt for user: {user_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Log successful login attempt
+        log_login_attempt(db, user_data.username, True, request)
+        logger.info(f"Successful login for user: {user_data.username}")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user.username})
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            username=user.username
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+@app.post("/auth/register", response_model=dict)
+async def register(user_data: UserRegister, request: Request, db=Depends(get_db)):
+    """Register endpoint"""
+    try:
+        logger.info(f"Registration attempt for user: {user_data.username}")
+        logger.info(f"Request headers: {dict(request.headers)}")
+        logger.info(f"Request client: {request.client}")
+        
+        # Check if username already exists
+        existing_user = get_user_by_username(db, user_data.username)
+        if existing_user:
+            logger.warning(f"Registration failed - username already exists: {user_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already registered"
+            )
+        
+        # Create new user
+        create_user(db, user_data.username, user_data.password, user_data.email)
+        logger.info(f"Successfully registered user: {user_data.username}")
+        
+        return {"message": "User registered successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+# Dependency to get current user
+async def get_current_user_dependency(credentials: HTTPAuthorizationCredentials = Depends(security), db=Depends(get_db)):
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user = get_current_user(credentials.credentials, db)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 @app.get("/")
 async def root():
+    """Redirect to login page"""
+    return HTMLResponse(
+        """
+        <html>
+        <head>
+            <meta http-equiv="refresh" content="0; url=/login">
+        </head>
+        <body>
+            <p>Redirecting to login...</p>
+        </body>
+        </html>
+        """
+    )
+
+@app.get("/login")
+async def login_page():
+    """Serve login page"""
+    try:
+        with open("login.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(html_content)
+    except FileNotFoundError:
+        return HTMLResponse(
+            """
+            <h1>Login Page Not Found</h1>
+            <p>login.html file not found. Please ensure the file exists in the same directory as the backend.</p>
+            """
+        )
+
+@app.get("/app")
+async def app_page():
+    """Serve the main application page (authentication handled by frontend)"""
     try:
         with open("frontend.html", "r", encoding="utf-8") as f:
             html_content = f.read()
@@ -91,15 +248,15 @@ async def root():
     except FileNotFoundError:
         return HTMLResponse(
             """
-<h1>Marker API</h1>
-<ul>
-    <li><a href="/docs">API Documentation</a></li>
-    <li><a href="/marker">Run marker (post request only)</a></li>
-</ul>
-<p>Frontend file (frontend.html) not found. Please ensure the file exists in the same directory as the backend.</p>
-"""
+            <h1>Application Not Found</h1>
+            <p>frontend.html file not found. Please ensure the file exists in the same directory as the backend.</p>
+            """
         )
 
+@app.get("/auth/verify")
+async def verify_auth(current_user: User = Depends(get_current_user_dependency)):
+    """Verify if the user is authenticated"""
+    return {"authenticated": True, "username": current_user.username}
 
 class CommonParams(BaseModel):
     filepath: Annotated[
@@ -199,7 +356,8 @@ async def _convert_pdf(params: CommonParams):
 
 
 @app.post("/marker")
-async def convert_pdf(params: CommonParams):
+async def convert_pdf(params: CommonParams, current_user: User = Depends(get_current_user_dependency)):
+    """Convert PDF endpoint (requires authentication)"""
     return await _convert_pdf(params)
 
 
@@ -214,9 +372,11 @@ async def convert_pdf_upload(
     file: UploadFile = File(
         ..., description="The PDF file to convert.", media_type="application/pdf"
     ),
+    current_user: User = Depends(get_current_user_dependency)
 ):
+    """Convert PDF upload endpoint (requires authentication)"""
     # Log all received parameters
-    logger.info("Received upload request with parameters:")
+    logger.info(f"Received upload request from user {current_user.username} with parameters:")
     logger.info(f"  page_range: {page_range}")
     logger.info(f"  force_ocr: {force_ocr}")
     logger.info(f"  paginate_output: {paginate_output}")
@@ -280,3 +440,6 @@ def server_cli(port: int, host: str):
         host=host,
         port=port,
     )
+
+if __name__ == "__main__":
+    server_cli()
