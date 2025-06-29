@@ -300,9 +300,12 @@
                 console.log('Login response data:', data);
                 
                 if (response.ok) {
-                    // Store the token
-                    localStorage.setItem('auth_token', data.access_token);
-                    localStorage.setItem('username', data.username);
+                    // Store the token in sessionStorage
+                    sessionStorage.setItem('auth_token', data.access_token);
+                    sessionStorage.setItem('username', data.username);
+                    
+                    // Set flag for internal navigation to prevent token clearing
+                    window.isInternalNavigation = true;
                     
                     // Redirect to main application
                     window.location.href = '/app';
@@ -388,12 +391,23 @@
 
         // Check if user is already logged in
         window.onload = function() {
-            const token = localStorage.getItem('auth_token');
+            const token = sessionStorage.getItem('auth_token');
             if (token) {
+                // Set flag for internal navigation
+                window.isInternalNavigation = true;
                 // Redirect to main app if already logged in
                 window.location.href = '/app';
             }
         };
+
+        // Session-based authentication: Clear token when tab is closed
+        window.addEventListener('beforeunload', function(e) {
+            if (!window.isInternalNavigation) {
+                // Only clear if not navigating internally
+                sessionStorage.removeItem('auth_token');
+                sessionStorage.removeItem('username');
+            }
+        });
     </script>
 </body>
 

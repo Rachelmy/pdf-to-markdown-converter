@@ -189,8 +189,8 @@
 
         // Check authentication on page load
         window.onload = async function() {
-            const token = localStorage.getItem('auth_token');
-            const username = localStorage.getItem('username');
+            const token = sessionStorage.getItem('auth_token');
+            const username = sessionStorage.getItem('username');
             
             if (!token || !username) {
                 // Redirect to login if no token
@@ -210,22 +210,34 @@
                     document.getElementById('username').textContent = username;
                 } else {
                     // Token is invalid, redirect to login
-                    localStorage.removeItem('auth_token');
-                    localStorage.removeItem('username');
+                    sessionStorage.removeItem('auth_token');
+                    sessionStorage.removeItem('username');
                     window.location.href = '/login';
                 }
             } catch (error) {
                 console.error('Auth verification error:', error);
                 // Network error, redirect to login
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('username');
+                sessionStorage.removeItem('auth_token');
+                sessionStorage.removeItem('username');
                 window.location.href = '/login';
             }
         };
 
+        // Session-based authentication: Clear token when tab is closed
+        let isInternalNavigation = false;
+        
+        // Set flag when navigating internally
+        window.addEventListener('beforeunload', function(e) {
+            if (!isInternalNavigation) {
+                // Only clear if not navigating internally
+                sessionStorage.removeItem('auth_token');
+                sessionStorage.removeItem('username');
+            }
+        });
+
         // Function to get auth headers
         function getAuthHeaders() {
-            const token = localStorage.getItem('auth_token');
+            const token = sessionStorage.getItem('auth_token');
             return {
                 'Authorization': `Bearer ${token}`
             };
@@ -233,8 +245,9 @@
 
         // Logout function
         function logout() {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('username');
+            isInternalNavigation = true;
+            sessionStorage.removeItem('auth_token');
+            sessionStorage.removeItem('username');
             window.location.href = '/login';
         }
 
@@ -360,8 +373,8 @@
 
                 // Check if token is expired
                 if (response.status === 401) {
-                    localStorage.removeItem('auth_token');
-                    localStorage.removeItem('username');
+                    sessionStorage.removeItem('auth_token');
+                    sessionStorage.removeItem('username');
                     window.location.href = '/login';
                     return;
                 }
