@@ -144,6 +144,11 @@ body {
 
 .option-group {
     margin-bottom: 2rem;
+    transition: transform 0.3s ease;
+}
+
+.option-group:hover {
+    transform: translateX(5px);
 }
 
 .option-group label {
