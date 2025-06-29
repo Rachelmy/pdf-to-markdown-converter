@@ -48,6 +48,7 @@ from typing import Optional, Annotated
 import io
 
 from fastapi import FastAPI, Form, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.settings import settings
@@ -71,18 +72,33 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def root():
-    return HTMLResponse(
-        """
+    try:
+        with open("frontend.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(html_content)
+    except FileNotFoundError:
+        return HTMLResponse(
+            """
 <h1>Marker API</h1>
 <ul>
     <li><a href="/docs">API Documentation</a></li>
     <li><a href="/marker">Run marker (post request only)</a></li>
 </ul>
+<p>Frontend file (frontend.html) not found. Please ensure the file exists in the same directory as the backend.</p>
 """
-    )
+        )
 
 
 class CommonParams(BaseModel):
