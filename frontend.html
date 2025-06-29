@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,16 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+        integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
+        integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
+        crossorigin="anonymous"></script>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -55,7 +62,7 @@
             <!-- Options Section -->
             <div class="options-section">
                 <h3><i class="fas fa-cog"></i> Conversion Options</h3>
-                
+
                 <div class="option-group">
                     <label for="outputFormat">Output Format</label>
                     <select id="outputFormat">
@@ -114,7 +121,8 @@
         <div class="results-section" id="resultsSection" style="display: none;">
             <h3><i class="fas fa-file-alt"></i> Conversion Results</h3>
             <div id="viewToggle" style="margin-bottom: 1rem; display: none;">
-                <button class="convert-btn" onclick="toggleView()" style="width: auto; margin-right: 1rem; background: var(--accent-color);">
+                <button class="convert-btn" onclick="toggleView()"
+                    style="width: auto; margin-right: 1rem; background: var(--accent-color);">
                     <i class="fas fa-eye"></i> <span id="toggleText">Show Raw</span>
                 </button>
             </div>
@@ -125,7 +133,8 @@
                 <button class="convert-btn" onclick="downloadResult()" style="width: auto; margin-right: 1rem;">
                     <i class="fas fa-download"></i> Download All Results (ZIP)
                 </button>
-                <button class="convert-btn" onclick="copyToClipboard()" style="width: auto; background: var(--secondary-color);">
+                <button class="convert-btn" onclick="copyToClipboard()"
+                    style="width: auto; background: var(--secondary-color);">
                     <i class="fas fa-copy"></i> Copy to Clipboard
                 </button>
             </div>
@@ -199,6 +208,7 @@
             hideStatus();
         }
 
+        //This turns ugly numbers like 2048576 into pretty ones like 2.00 MB. It's like a translator for file sizes!
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -228,7 +238,8 @@
             hideStatus();
             hideResults();
 
-            // Simulate progress
+            // Simulate progress  Every 200ms, add random amount (up to 15%)
+            //Stop at 90% and wait for real result.
             let progress = 0;
             const progressInterval = setInterval(() => {
                 progress += Math.random() * 15;
@@ -262,7 +273,7 @@
                     if (result.success) {
                         conversionResult = result;
                         showResults(result.output);
-                        
+
                         // Show status about images if they exist
                         if (result.images && Object.keys(result.images).length > 0) {
                             const imageCount = Object.keys(result.images).length;
@@ -273,7 +284,7 @@
                     } else {
                         showStatus('Conversion failed: ' + result.error, 'error');
                     }
-                    
+
                     // Hide loading
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('progressBar').style.display = 'none';
@@ -293,7 +304,7 @@
             const resultContent = document.getElementById('resultContent');
             const resultText = document.getElementById('resultText');
             const viewToggle = document.getElementById('viewToggle');
-            
+
             // Check if the output format is markdown
             if (conversionResult && conversionResult.format === 'markdown') {
                 // Show toggle button for markdown
@@ -307,7 +318,7 @@
                 resultText.textContent = output;
                 resultContent.classList.remove('rendered');
             }
-            
+
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
         }
@@ -315,34 +326,34 @@
         function renderMarkdownWithImages(markdownContent) {
             const resultContent = document.getElementById('resultContent');
             const resultText = document.getElementById('resultText');
-            
+
             // Replace image references with actual base64 data
             let processedMarkdown = markdownContent;
-            
+
             if (conversionResult && conversionResult.images) {
                 for (const [imageName, base64Data] of Object.entries(conversionResult.images)) {
                     // Create a regex to match image references in markdown
                     // This handles various formats like ![alt](imageName) or ![alt](imageName.ext)
                     const imageRegex = new RegExp(`!\\[([^\\]]*)\\]\\(${imageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\.[a-zA-Z]+)?\\)`, 'g');
-                    
+
                     // Replace with base64 data URL
                     processedMarkdown = processedMarkdown.replace(imageRegex, (match, altText) => {
                         return `![${altText}](data:image/png;base64,${base64Data})`;
                     });
                 }
             }
-            
+
             // Store both raw and processed markdown
             resultText.setAttribute('data-raw-markdown', markdownContent);
             resultText.setAttribute('data-processed-markdown', processedMarkdown);
-            
+
             // Render the markdown
             try {
                 const renderedHtml = marked.parse(processedMarkdown);
                 resultText.innerHTML = renderedHtml;
                 resultContent.classList.add('rendered');
                 document.getElementById('toggleText').textContent = 'Show Raw';
-                
+
                 // Render LaTeX after markdown is rendered
                 renderLaTeX(resultText);
             } catch (error) {
@@ -359,10 +370,10 @@
                 renderMathInElement(element, {
                     // Delimiters for inline and block math
                     delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false},
-                        {left: '\\(', right: '\\)', display: false},
-                        {left: '\\[', right: '\\]', display: true}
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true }
                     ],
                     // Throw on error instead of rendering error message
                     throwOnError: false,
@@ -387,7 +398,7 @@
             const resultContent = document.getElementById('resultContent');
             const resultText = document.getElementById('resultText');
             const toggleText = document.getElementById('toggleText');
-            
+
             if (resultContent.classList.contains('rendered')) {
                 // Switch to raw view
                 resultText.textContent = resultText.getAttribute('data-raw-markdown');
@@ -401,7 +412,7 @@
                     resultText.innerHTML = renderedHtml;
                     resultContent.classList.add('rendered');
                     toggleText.textContent = 'Show Raw';
-                    
+
                     // Render LaTeX after switching to rendered view
                     renderLaTeX(resultText);
                 } catch (error) {
@@ -427,7 +438,7 @@
 
         function downloadResult() {
             if (!conversionResult) return;
-            
+
             // Create zip file with all content
             createAndDownloadZip();
         }
@@ -436,11 +447,11 @@
             try {
                 const zip = new JSZip();
                 const baseFileName = selectedFile.name.replace('.pdf', '');
-                
+
                 // Add the main output file with original filename
                 const outputFileName = `${baseFileName}_converted.${conversionResult.format}`;
                 zip.file(outputFileName, conversionResult.output);
-                
+
                 // Add images if they exist
                 if (conversionResult.images && Object.keys(conversionResult.images).length > 0) {
                     let imageCount = 0;
@@ -448,29 +459,29 @@
                         try {
                             // Remove data URL prefix if present
                             const base64Clean = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
-                            
+
                             // Clean up image name to avoid duplicate extensions
                             let cleanImageName = imageName;
                             // Remove any existing extension
                             if (cleanImageName.includes('.')) {
                                 cleanImageName = cleanImageName.split('.').slice(0, -1).join('.');
                             }
-                            
+
                             // Determine file extension from image name or default to png
-                            const extension = imageName.includes('.') ? 
+                            const extension = imageName.includes('.') ?
                                 imageName.split('.').pop() : 'png';
-                            
+
                             // Create filename directly in zip without output folder
                             const fileName = `${cleanImageName}.${extension}`;
-                            
+
                             // Add to zip
-                            zip.file(fileName, base64Clean, {base64: true});
+                            zip.file(fileName, base64Clean, { base64: true });
                             imageCount++;
                         } catch (error) {
                             console.error(`Error processing image ${imageName}:`, error);
                         }
                     }
-                    
+
                     // Add a README file with information
                     const readmeContent = `PDF Conversion Results
 
@@ -500,9 +511,9 @@ Generated on: ${new Date().toLocaleString()}
 `;
                     zip.file('README.txt', readmeContent);
                 }
-                
+
                 // Generate and download zip file
-                const zipBlob = await zip.generateAsync({type: 'blob'});
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
                 const zipUrl = URL.createObjectURL(zipBlob);
                 const a = document.createElement('a');
                 a.href = zipUrl;
@@ -511,9 +522,9 @@ Generated on: ${new Date().toLocaleString()}
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(zipUrl);
-                
+
                 showStatus('Download completed! Zip file contains all conversion results and images.', 'success');
-                
+
             } catch (error) {
                 console.error('Error creating zip file:', error);
                 showStatus('Error creating zip file: ' + error.message, 'error');
@@ -522,29 +533,14 @@ Generated on: ${new Date().toLocaleString()}
 
         function copyToClipboard() {
             if (!conversionResult) return;
-            
+
             navigator.clipboard.writeText(conversionResult.output).then(() => {
                 showStatus('Result copied to clipboard!', 'success');
             }).catch(() => {
                 showStatus('Failed to copy to clipboard.', 'error');
             });
         }
-
-        // Add some interactive effects
-        document.addEventListener('DOMContentLoaded', () => {
-            // Add hover effects to option groups
-            const optionGroups = document.querySelectorAll('.option-group');
-            optionGroups.forEach(group => {
-                group.addEventListener('mouseenter', () => {
-                    group.style.transform = 'translateX(5px)';
-                    group.style.transition = 'transform 0.3s ease';
-                });
-                
-                group.addEventListener('mouseleave', () => {
-                    group.style.transform = 'translateX(0)';
-                });
-            });
-        });
     </script>
 </body>
-</html> 
+
+</html>
