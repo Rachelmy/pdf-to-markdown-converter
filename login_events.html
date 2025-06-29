@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Events - PDF Converter Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .events-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .events-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .events-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .events-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .events-table-container {
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            overflow-x: auto;
+        }
+
+        .events-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .events-table th,
+        .events-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .events-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+            position: sticky;
+            top: 0;
+        }
+
+        .events-table td {
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-failure {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .timestamp {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .user-agent {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: var(--primary-hover);
+        }
+
+        .pagination button:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .back-button:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .events-container {
+                padding: 1rem;
+            }
+            
+            .events-header h1 {
+                font-size: 2rem;
+            }
+            
+            .events-table th,
+            .events-table td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="back-button" onclick="window.location.href='/app'">
+        <i class="fas fa-arrow-left"></i> Back to App
+    </button>
+
+    <div class="events-container">
+        <div class="events-header">
+            <h1><i class="fas fa-shield-alt"></i> Login Events</h1>
+            <p>Monitor all login attempts and security events</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-number" id="totalAttempts">-</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successfulLogins">-</div>
+                <div class="stat-label">Successful Logins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedLogins">-</div>
+                <div class="stat-label">Failed Logins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueUsers">-</div>
+                <div class="stat-label">Unique Users</div>
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        <div class="events-table-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Loading login events...</p>
+            </div>
+
+            <table class="events-table" id="eventsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Username</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                        <th>Failure Reason</th>
+                        <th>User Agent</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <button id="prevBtn" onclick="changePage(-1)">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextBtn" onclick="changePage(1)">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const pageSize = 50;
+        let totalPages = 1;
+
+        // Load events on page load
+        window.onload = function() {
+            loadEvents();
+        };
+
+        async function loadEvents(page = 1) {
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('eventsTable');
+            const pagination = document.getElementById('pagination');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            pagination.style.display = 'none';
+
+            try {
+                const offset = (page - 1) * pageSize;
+                const response = await fetch(`/api/login-events?limit=${pageSize}&offset=${offset}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch login events');
+                }
+
+                const data = await response.json();
+                
+                // Update statistics
+                updateStats(data);
+                
+                // Update table
+                updateTable(data.events);
+                
+                // Update pagination
+                updatePagination(data.total_count, page);
+                
+                loading.style.display = 'none';
+                table.style.display = 'table';
+                pagination.style.display = 'flex';
+
+            } catch (error) {
+                console.error('Error loading events:', error);
+                loading.innerHTML = `
+                    <div style="color: var(--error-color);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error loading login events: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(data) {
+            const totalAttempts = data.total_count;
+            const successfulLogins = data.events.filter(event => event.success).length;
+            const failedLogins = data.events.filter(event => !event.success).length;
+            const uniqueUsers = new Set(data.events.map(event => event.username)).size;
+
+            document.getElementById('totalAttempts').textContent = totalAttempts;
+            document.getElementById('successfulLogins').textContent = successfulLogins;
+            document.getElementById('failedLogins').textContent = failedLogins;
+            document.getElementById('uniqueUsers').textContent = uniqueUsers;
+        }
+
+        function updateTable(events) {
+            const tbody = document.getElementById('eventsTableBody');
+            tbody.innerHTML = '';
+
+            events.forEach(event => {
+                const row = document.createElement('tr');
+                
+                const timestamp = new Date(event.timestamp).toLocaleString();
+                const statusClass = event.success ? 'status-success' : 'status-failure';
+                const statusText = event.success ? 'Success' : 'Failed';
+                const failureReason = event.failure_reason || '-';
+                const userAgent = event.user_agent || '-';
+
+                row.innerHTML = `
+                    <td class="timestamp">${timestamp}</td>
+                    <td><strong>${event.username}</strong></td>
+                    <td>${event.ip_address || '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${failureReason}</td>
+                    <td class="user-agent" title="${userAgent}">${userAgent}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination(totalCount, currentPage) {
+            totalPages = Math.ceil(totalCount / pageSize);
+            currentPage = Math.max(1, Math.min(currentPage, totalPages));
+
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalCount} total events)`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadEvents(currentPage);
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadEvents(currentPage);
+        }, 30000);
+    </script>
+</body>
+
+</html> 

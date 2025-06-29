@@ -258,6 +258,65 @@ async def verify_auth(current_user: User = Depends(get_current_user_dependency))
     """Verify if the user is authenticated"""
     return {"authenticated": True, "username": current_user.username}
 
+@app.get("/login-events")
+async def login_events_page():
+    """Serve the login events page"""
+    try:
+        with open("login_events.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(html_content)
+    except FileNotFoundError:
+        return HTMLResponse(
+            """
+            <h1>Login Events Page Not Found</h1>
+            <p>login_events.html file not found. Please ensure the file exists in the same directory as the backend.</p>
+            """
+        )
+
+@app.get("/api/login-events")
+async def get_login_events(
+    limit: int = 100,
+    offset: int = 0,
+    db=Depends(get_db)
+):
+    """Get login events from database"""
+    try:
+        from database import LoginAttempt
+        
+        # Get total count
+        total_count = db.query(LoginAttempt).count()
+        
+        # Get login attempts with pagination
+        login_attempts = db.query(LoginAttempt).order_by(
+            LoginAttempt.timestamp.desc()
+        ).offset(offset).limit(limit).all()
+        
+        # Convert to dictionary format
+        events = []
+        for attempt in login_attempts:
+            events.append({
+                "id": attempt.id,
+                "username": attempt.username,
+                "ip_address": attempt.ip_address,
+                "user_agent": attempt.user_agent,
+                "success": attempt.success,
+                "timestamp": attempt.timestamp.isoformat() if attempt.timestamp else None,
+                "failure_reason": attempt.failure_reason
+            })
+        
+        return {
+            "events": events,
+            "total_count": total_count,
+            "limit": limit,
+            "offset": offset
+        }
+    except Exception as e:
+        logger.error(f"Error fetching login events: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error fetching login events"
+        )
+
 class CommonParams(BaseModel):
     filepath: Annotated[
         Optional[str], Field(description="The path to the PDF file to convert.")
