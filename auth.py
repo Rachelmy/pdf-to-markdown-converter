@@ -11,7 +11,7 @@ from database import User, LoginAttempt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = "your-secret-key-change-this-in-production"
+SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 # Session-based token - expires in 8 hours (typical work session)
 ACCESS_TOKEN_EXPIRE_HOURS = 8
